@@ -1,40 +1,30 @@
-# Title     : TODO
-# Objective : TODO
-# Created by: lpbrochu
-# Created on: 23/11/17
-
-#SERVER.R
 library(shiny)
+library(ggplot2)
 
-#writing server function
-shinyServer(function(input, output) {
-
-#referring output distPlot in ui.r as output$distPlot
-  output$distPlot <- renderPlot({
-
-#referring input p in ui.r as input$p
-    if(input$p=='a'){
-      i<-1
-    }
-
-    if(input$p=='b'){
-      i<-2
-    }
-
-    if(input$p=='c'){
-      i<-3
-    }
-
-    if(input$p=='d'){
-      i<-4
-    }
-
-    x    <- iris[, i]
-
-#referring input bins in ui.r as input$bins
-    bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-#producing histogram as output
-    hist(x, breaks = bins, col = 'darkgray', border = 'white')
+function(input, output) {
+  
+  dataset <- reactive({
+    diamonds[sample(nrow(diamonds), input$sampleSize),]
   })
-})
+  
+  output$plot <- renderPlot({
+    
+    p <- ggplot(dataset(), aes_string(x=input$x, y=input$y)) + geom_point()
+    
+    if (input$color != 'None')
+      p <- p + aes_string(color=input$color)
+    
+    facets <- paste(input$facet_row, '~', input$facet_col)
+    if (facets != '. ~ .')
+      p <- p + facet_grid(facets)
+    
+    if (input$jitter)
+      p <- p + geom_jitter()
+    if (input$smooth)
+      p <- p + geom_smooth()
+    
+    print(p)
+    
+  }, height=700)
+  
+}
